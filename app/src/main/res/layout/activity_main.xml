@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/grass">
+
+    <Button
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:id="@+id/btn_album"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="90dp"
+        android:background="@drawable/from_album"/>
+
+    <Button
+        android:text="内网访问"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/net_inner"
+        android:layout_centerHorizontal="false"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="false"
+        android:layout_marginLeft="80dp"
+        android:layout_marginBottom="50dp" />
+
+    <Button
+        android:text="外网访问"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/net_outer"
+        android:layout_below="@+id/textView3"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="80dp" />
+
+    <TextView
+        android:text="TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/net_addr_text"
+        android:layout_alignBaseline="@+id/textView3"
+        android:layout_alignBottom="@+id/textView3"
+        android:layout_toEndOf="@+id/textView3" />
+
+    <TextView
+        android:text="服务器地址："
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView3"
+        android:layout_above="@+id/net_inner"
+        android:layout_toStartOf="@+id/imageView20"
+        android:layout_marginLeft="80dp"
+        android:layout_marginBottom="15dp" />
+
+    <TextView
+        android:text="Powered by BJUT.Eager"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView"
+        android:layout_centerVertical="false"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp" />
+
+    <Button
+        android:id="@+id/btn_camera"
+        android:layout_marginRight="90dp"
+        android:background="@drawable/from_camera"
+        android:layout_centerHorizontal="false"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="80dp"
+        android:layout_height="80dp" />
+
+    <TextView
+        android:text="花卉识别"
+        android:layout_width="match_parent"
+        android:id="@+id/textView4"
+        android:textSize="30sp"
+        android:background="@android:color/holo_green_light"
+        android:gravity="center_vertical|center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_height="50dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp" />
+
+</RelativeLayout>
