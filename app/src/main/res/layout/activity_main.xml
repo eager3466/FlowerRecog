@@ -50,7 +50,6 @@
         android:layout_height="wrap_content"
         android:id="@+id/textView3"
         android:layout_above="@+id/net_inner"
-        android:layout_toStartOf="@+id/imageView20"
         android:layout_marginLeft="80dp"
         android:layout_marginBottom="15dp" />
 
@@ -79,6 +78,7 @@
         android:layout_width="match_parent"
         android:id="@+id/textView4"
         android:textSize="30sp"
+        android:textColor="#000000"
         android:background="@android:color/holo_green_light"
         android:gravity="center_vertical|center_horizontal"
         android:layout_alignParentTop="true"
@@ -87,5 +87,15 @@
         android:layout_marginTop="100dp"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp" />
+
+    <Button
+        android:text="图片设置"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_settings"
+        android:alpha="100"
+        android:layout_below="@+id/btn_album"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp" />
 
 </RelativeLayout>

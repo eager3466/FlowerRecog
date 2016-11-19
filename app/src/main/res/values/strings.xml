@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FlowerRecog</string>
+    <string name="app_name">花卉识别</string>
     <string name="action_take_photo">拍照</string>
     <string name="action_settings">settings</string>
     <string name="action_clip">裁剪</string>
@@ -8,4 +8,6 @@
     <string name="msg_camera_invalid_unknown_error">无法打开相机，未知错误</string>
     <string name="msg_could_not_save_photo">无法保存图片</string>
     <string name="msg_clipping_image">正在裁剪图片</string>
+    <string name="title_activity_settings">图片参数设置</string>
+
 </resources>

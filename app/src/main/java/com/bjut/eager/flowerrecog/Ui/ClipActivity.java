@@ -1,6 +1,7 @@
 package com.bjut.eager.flowerrecog.Ui;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -36,12 +37,20 @@ public class ClipActivity extends Activity {
     private RecyclerView.Adapter mAdapter;
     private LinearLayoutManager mLayoutManager;
 
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clip);
         final String filePath = getIntent().getStringExtra("path");
         final Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+
+
+        sharedPreferences = getSharedPreferences("NET_CONFIG", Activity.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+        final int picSize = sharedPreferences.getInt("PicSize", 227);
 
         clipImageView = (ClipImageView) findViewById(R.id.clip_image_view);
         clipImageView.setImageBitmap(bitmap);
@@ -54,11 +63,10 @@ public class ClipActivity extends Activity {
             public void onClick(View v) {
 
                 if(btn_confirm.getText().equals("确认裁剪")) {
+                    btn_confirm.setText("正在上传并识别中……");
                     clipImageView.setVisibility(View.INVISIBLE);
                     Bitmap result = clipImageView.clip();
-//                    result = Bitmap.createScaledBitmap(result,256,256,true);
-                    result = Bitmap.createScaledBitmap(result,227,227,true);
-//                    result = Bitmap.createScaledBitmap(result,28,28,true);
+                    result = Bitmap.createScaledBitmap(result, picSize, picSize, true);
                     UpLoadTask task = new UpLoadTask(show, handler, getApplication());
                     task.execute(result);
 

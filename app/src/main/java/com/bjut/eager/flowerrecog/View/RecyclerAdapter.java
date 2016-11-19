@@ -40,7 +40,9 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
     @Override
     public void onBindViewHolder(RecyclerAdapter.ViewHolder holder, int position) {
         holder.desc.setText("描述："+ mItems.get(position).getDescription());
-        holder.prob.setText("概率：" + String.valueOf(mItems.get(position).getProbability()));
+        float prob = mItems.get(position).getProbability();
+        prob =  (float)(Math.round(prob*1000000))/10000;
+        holder.prob.setText("概率：" + prob + "%");
     }
 
     @Override

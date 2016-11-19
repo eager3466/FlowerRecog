@@ -119,6 +119,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.btn_settings).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -140,8 +147,8 @@ public class MainActivity extends Activity {
                 if (data == null)
                     return;
 
-                Uri selectedImage = data.getData();
-                selectedImage = geturi(data);
+//                Uri selectedImage = data.getData();
+                Uri selectedImage = geturi(data);
                 String[] filePathColumns = {MediaStore.Images.Media.DATA};
                 Cursor c = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
                 if(c != null) {
