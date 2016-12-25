@@ -34,13 +34,13 @@ public class UpLoadTask extends AsyncTask<Bitmap, Integer, String> {
     private static String REQUEST_URL;
 
     private static final String TAG = "uploadFile";
-    private static final int TIME_OUT = 30 * 1000; // 超时时间
+    private static final int TIME_OUT = 60 * 1000; // 超时时间
     private static final String CHARSET = "utf-8"; // 设置编码
 
     String BOUNDARY = UUID.randomUUID().toString(); // 边界标识 随机生成
     String PREFIX = "--", LINE_END = "\r\n";
 //    String CONTENT_TYPE = "multipart/form-data"; // 内容类型
-    String CONTENT_TYPE = "text/html"; // 内容类型
+    String CONTENT_TYPE = "text/plain"; // 内容类型
 
     DataOutputStream outputStream = null;
     Bitmap bitmap = null;
@@ -95,6 +95,7 @@ public class UpLoadTask extends AsyncTask<Bitmap, Integer, String> {
                 }
                 result = builder.toString();
                 if (result != null) {
+                    Log.i("YhqTest", "result" + result);
                     items = JsonUtil.parse(result);
                 }
             }

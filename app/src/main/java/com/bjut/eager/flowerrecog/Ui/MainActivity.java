@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -22,36 +24,64 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bjut.eager.flowerrecog.R;
+import com.bjut.eager.flowerrecog.anno;
+import com.bjut.eager.flowerrecog.common.util.PreferenceUtils;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.Calendar;
 import java.util.Locale;
+
+import static com.bjut.eager.flowerrecog.common.constant.Consts.SERVER_INNER;
+import static com.bjut.eager.flowerrecog.common.constant.Consts.SERVER_OUTER;
+import static com.bjut.eager.flowerrecog.common.constant.PreferenceConsts.SERVER_ADDRESS;
 
 public class MainActivity extends Activity {
 
     final public static int REQUEST_CODE_ASK_CAMERA = 1;
     final public static int REQUEST_CODE_ASK_ALBUM  = 2;
 
-    private static final String SERVER_INNER = "http://172.21.15.159:8086";
-    private static final String SERVER_OUTER = "http://mpccl.bjut.edu.cn/paperretrieval/transmit";
-
     Button btn_camera;
     private String mFilePath;
 
+    @anno(value = "yhqTest")
+    String tryyyy;
+
+    @anno(value = "test200")
+            String try2;
+
+    @anno
+            String try3;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
+    void parse(Object object) {
+        final Class<?> clazz = object.getClass();
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field: fields) {
+            if (field.isAnnotationPresent(anno.class)) {
+                anno  aannn = field.getAnnotation(anno.class);
+                String result = aannn.value();
+                try {
+                    field.set(object, result);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    Handler handler = new Handler();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sharedPreferences = getSharedPreferences("NET_CONFIG", Activity.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
-        String address = sharedPreferences.getString("ServerAddress","http://172.21.15.159:8086");
-        ((TextView)findViewById(R.id.net_addr_text)).setText(address);
 
+        String address = PreferenceUtils.getString(SERVER_ADDRESS, SERVER_INNER);
+        parse(this);
+        ((TextView)findViewById(R.id.net_addr_text)).setText(address);
         btn_camera = (Button) findViewById(R.id.btn_camera);
         btn_camera.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,8 +135,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 ((TextView)findViewById(R.id.net_addr_text)).setText(SERVER_INNER);
-                editor.putString("ServerAddress", SERVER_INNER);
-                editor.commit();
+                PreferenceUtils.putString(SERVER_ADDRESS, SERVER_INNER);
             }
         });
 
@@ -114,8 +143,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 ((TextView)findViewById(R.id.net_addr_text)).setText(SERVER_OUTER);
-                editor.putString("ServerAddress", SERVER_OUTER);
-                editor.commit();
+                PreferenceUtils.putString(SERVER_ADDRESS, SERVER_OUTER);
             }
         });
 
@@ -149,6 +177,7 @@ public class MainActivity extends Activity {
 
 //                Uri selectedImage = data.getData();
                 Uri selectedImage = geturi(data);
+                Log.i("Yhqtest", selectedImage.toString());
                 String[] filePathColumns = {MediaStore.Images.Media.DATA};
                 Cursor c = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
                 if(c != null) {
@@ -226,6 +255,31 @@ public class MainActivity extends Activity {
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
+
+    private static boolean isExit = false;
+    Handler mHandler =  new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            isExit = false;
+        }
+    };
+
+    @Override
+    public void onBackPressed() {
+        exit();
+    }
+
+    private void exit() {
+        if (!isExit) {
+            isExit = true;
+            Toast.makeText(getApplicationContext(), "再次点击返回键退出程序", Toast.LENGTH_SHORT).show();
+            mHandler.sendEmptyMessageDelayed(0, 2000);
+        } else {
+            finish();
+            System.exit(0);
+        }
+
+    }
+
 }
-
-
