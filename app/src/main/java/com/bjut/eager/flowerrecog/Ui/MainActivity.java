@@ -44,14 +44,6 @@ public class MainActivity extends Activity {
     Button btn_camera;
     private String mFilePath;
 
-    @anno(value = "yhqTest")
-    String tryyyy;
-
-    @anno(value = "test200")
-            String try2;
-
-    @anno
-            String try3;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
@@ -71,14 +63,10 @@ public class MainActivity extends Activity {
         }
     }
 
-    Handler handler = new Handler();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
         String address = PreferenceUtils.getString(SERVER_ADDRESS, SERVER_INNER);
         parse(this);
         ((TextView)findViewById(R.id.net_addr_text)).setText(address);
