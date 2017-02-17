@@ -3,8 +3,8 @@ package com.bjut.eager.flowerrecog.Ui;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -24,11 +24,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bjut.eager.flowerrecog.R;
-import com.bjut.eager.flowerrecog.anno;
 import com.bjut.eager.flowerrecog.common.util.PreferenceUtils;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -44,31 +42,11 @@ public class MainActivity extends Activity {
     Button btn_camera;
     private String mFilePath;
 
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
-
-    void parse(Object object) {
-        final Class<?> clazz = object.getClass();
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field: fields) {
-            if (field.isAnnotationPresent(anno.class)) {
-                anno  aannn = field.getAnnotation(anno.class);
-                String result = aannn.value();
-                try {
-                    field.set(object, result);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         String address = PreferenceUtils.getString(SERVER_ADDRESS, SERVER_INNER);
-        parse(this);
         ((TextView)findViewById(R.id.net_addr_text)).setText(address);
         btn_camera = (Button) findViewById(R.id.btn_camera);
         btn_camera.setOnClickListener(new View.OnClickListener() {
@@ -80,7 +58,7 @@ public class MainActivity extends Activity {
                 String name = new DateFormat().format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
                 mFilePath = "/sdcard/AImage/"+name;
                 String temp = file.getAbsolutePath() + "/" + name;
-                Uri uri = Uri.fromFile(new File(temp));
+                Uri uri = null;
                 if (Build.VERSION.SDK_INT >= 23) {
                     int checkCameraPermission = ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.CAMERA);
                     if (checkCameraPermission != PackageManager.PERMISSION_GRANTED) {
@@ -90,12 +68,21 @@ public class MainActivity extends Activity {
                             Toast.makeText(getApplication(), "Denied just now", Toast.LENGTH_LONG).show();
                             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_ASK_CAMERA);
                         }
+                    } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        ContentValues contentValues = new ContentValues(1);
+                        contentValues.put(MediaStore.Images.Media.DATA, temp);
+                        uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                        startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
                     } else {
+                        uri = Uri.fromFile(new File(temp));
                         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
                         startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
                     }
                 } else {
+                    uri = Uri.fromFile(new File(temp));
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
                     startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
@@ -267,7 +254,5 @@ public class MainActivity extends Activity {
             finish();
             System.exit(0);
         }
-
     }
-
 }

@@ -13,10 +13,13 @@ import android.widget.ImageView;
 import com.bjut.eager.flowerrecog.Bean.Item;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -40,9 +43,8 @@ public class UpLoadTask extends AsyncTask<Bitmap, Integer, String> {
     String BOUNDARY = UUID.randomUUID().toString(); // 边界标识 随机生成
     String PREFIX = "--", LINE_END = "\r\n";
 //    String CONTENT_TYPE = "multipart/form-data"; // 内容类型
-    String CONTENT_TYPE = "text/plain"; // 内容类型
+    String CONTENT_TYPE = "text/html"; // 内容类型
 
-    DataOutputStream outputStream = null;
     Bitmap bitmap = null;
     ImageView show = null;
     Handler mHandler;
@@ -61,7 +63,7 @@ public class UpLoadTask extends AsyncTask<Bitmap, Integer, String> {
     protected String doInBackground(Bitmap... params) {
 
         bitmap = params[0];
-
+        OutputStream outputStream = null;
         try {
             URL url = new URL(REQUEST_URL);
 
@@ -73,13 +75,24 @@ public class UpLoadTask extends AsyncTask<Bitmap, Integer, String> {
             conn.setUseCaches(false); // 不允许使用缓存
             conn.setRequestMethod("POST"); // 请求方式
             conn.setRequestProperty("charset", CHARSET); // 设置编码
-            conn.setRequestProperty("connection", "keep-alive");
-            conn.setRequestProperty("Content-Type", CONTENT_TYPE + ";boundary=" + BOUNDARY);
+//            conn.setRequestProperty("connection", "keep-alive");
+            conn.setRequestProperty("Content-Type", CONTENT_TYPE);
             bitmap = params[0];
-            outputStream = new DataOutputStream(conn.getOutputStream());
-            boolean re = params[0].compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-            Log.i("YhqTest", "压缩情况：" + re);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            outputStream = conn.getOutputStream();
+//            boolean re = params[0].compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+//            Log.i("YhqTest", "压缩情况：" + re);
+            ByteArrayInputStream is = new ByteArrayInputStream(byteArray);
+            byte[] buffer = new byte[2048];
+            int length;
+            while (-1 != (length = is.read(buffer))) {
+                outputStream.write(buffer, 0, length);
+            }
+
             outputStream.flush();
+//            outputStream.flush();
 //            outputStream.write(6);
 //            outputStream.flush();
             int responseCode = conn.getResponseCode();

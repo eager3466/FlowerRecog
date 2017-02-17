@@ -7,7 +7,7 @@
 
     <TextView
         android:layout_width="65dp"
-        android:text="相关图片"
+        android:text="识别结果"
         android:textColor="#000000"
         android:id="@+id/textView2"
         android:gravity="center_vertical"
