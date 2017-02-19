@@ -24,111 +24,34 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bjut.eager.flowerrecog.R;
+import com.bjut.eager.flowerrecog.common.constant.Consts;
+import com.bjut.eager.flowerrecog.common.constant.PreferenceConsts;
 import com.bjut.eager.flowerrecog.common.util.PreferenceUtils;
 
 import java.io.File;
 import java.util.Calendar;
 import java.util.Locale;
 
-import static com.bjut.eager.flowerrecog.common.constant.Consts.SERVER_INNER;
-import static com.bjut.eager.flowerrecog.common.constant.Consts.SERVER_OUTER;
-import static com.bjut.eager.flowerrecog.common.constant.PreferenceConsts.SERVER_ADDRESS;
-
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements View.OnClickListener {
 
     final public static int REQUEST_CODE_ASK_CAMERA = 1;
     final public static int REQUEST_CODE_ASK_ALBUM  = 2;
 
-    Button btn_camera;
+    private Button btn_camera;
     private String mFilePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String address = PreferenceUtils.getString(SERVER_ADDRESS, SERVER_INNER);
+        String address = PreferenceUtils.getString(PreferenceConsts.SERVER_ADDRESS, Consts.SERVER_OUTER);
         ((TextView)findViewById(R.id.net_addr_text)).setText(address);
-        btn_camera = (Button) findViewById(R.id.btn_camera);
-        btn_camera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                File file = new File("/sdcard/AImage/");
-                if (!file.exists())
-                    file.mkdir();
-                String name = new DateFormat().format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
-                mFilePath = "/sdcard/AImage/"+name;
-                String temp = file.getAbsolutePath() + "/" + name;
-                Uri uri = null;
-                if (Build.VERSION.SDK_INT >= 23) {
-                    int checkCameraPermission = ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.CAMERA);
-                    if (checkCameraPermission != PackageManager.PERMISSION_GRANTED) {
-                        if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
-                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_ASK_CAMERA);
-                        else {
-                            Toast.makeText(getApplication(), "Denied just now", Toast.LENGTH_LONG).show();
-                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_ASK_CAMERA);
-                        }
-                    } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        ContentValues contentValues = new ContentValues(1);
-                        contentValues.put(MediaStore.Images.Media.DATA, temp);
-                        uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-                        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                        startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
-                    } else {
-                        uri = Uri.fromFile(new File(temp));
-                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                        startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
-                    }
-                } else {
-                    uri = Uri.fromFile(new File(temp));
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                    startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
-                }
-            }
-        });
 
-        findViewById(R.id.btn_album).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    //申请WRITE_EXTERNAL_STORAGE权限
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                            REQUEST_CODE_ASK_ALBUM);
-                } else {
-                    Intent intent = new Intent(Intent.ACTION_PICK,
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    startActivityForResult(intent, REQUEST_CODE_ASK_ALBUM);
-                }
-            }
-        });
-
-        findViewById(R.id.net_inner).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((TextView)findViewById(R.id.net_addr_text)).setText(SERVER_INNER);
-                PreferenceUtils.putString(SERVER_ADDRESS, SERVER_INNER);
-            }
-        });
-
-        findViewById(R.id.net_outer).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((TextView)findViewById(R.id.net_addr_text)).setText(SERVER_OUTER);
-                PreferenceUtils.putString(SERVER_ADDRESS, SERVER_OUTER);
-            }
-        });
-
-        findViewById(R.id.btn_settings).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                startActivity(intent);
-            }
-        });
+        findViewById(R.id.btn_camera).setOnClickListener(this);
+        findViewById(R.id.btn_album).setOnClickListener(this);
+        findViewById(R.id.net_inner).setOnClickListener(this);
+        findViewById(R.id.net_outer).setOnClickListener(this);
+        findViewById(R.id.btn_settings).setOnClickListener(this);
     }
 
     @Override
@@ -137,33 +60,41 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_CODE_ASK_CAMERA) {
-                String sdStatus = Environment.getExternalStorageState();
-                if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
-                    Log.i("TestFile",
-                            "SD card is not avaiable/writeable right now.");
-                    return;
-                }
-                Intent intent = new Intent(this, ClipActivity.class);
-                intent.putExtra("path", mFilePath);
-                startActivity(intent);
+                dealCaptureResult();
             } else if (requestCode == REQUEST_CODE_ASK_ALBUM) {
-                if (data == null)
-                    return;
+                dealAlbumResult(data);
+            }
+        }
+    }
+
+    private void dealCaptureResult() {
+        String sdStatus = Environment.getExternalStorageState();
+        if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
+            Log.i("TestFile",
+                    "SD card is not avaiable/writeable right now.");
+            return;
+        }
+        Intent intent = new Intent(this, ClipActivity.class);
+        intent.putExtra("path", mFilePath);
+        startActivity(intent);
+    }
+
+    private void dealAlbumResult(Intent data) {
+        if (data == null)
+            return;
 
 //                Uri selectedImage = data.getData();
-                Uri selectedImage = geturi(data);
-                Log.i("Yhqtest", selectedImage.toString());
-                String[] filePathColumns = {MediaStore.Images.Media.DATA};
-                Cursor c = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
-                if(c != null) {
-                    c.moveToFirst();
-                    int columnIndex = c.getColumnIndex(filePathColumns[0]);
-                    mFilePath = c.getString(columnIndex);
-                    Intent intent = new Intent(this, ClipActivity.class);
-                    intent.putExtra("path", mFilePath);
-                    startActivity(intent);
-                }
-            }
+        Uri selectedImage = getUri(data);
+        Log.i("Yhqtest", selectedImage.toString());
+        String[] filePathColumns = {MediaStore.Images.Media.DATA};
+        Cursor c = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
+        if(c != null) {
+            c.moveToFirst();
+            int columnIndex = c.getColumnIndex(filePathColumns[0]);
+            mFilePath = c.getString(columnIndex);
+            Intent intent = new Intent(this, ClipActivity.class);
+            intent.putExtra("path", mFilePath);
+            startActivity(intent);
         }
     }
 
@@ -172,7 +103,7 @@ public class MainActivity extends Activity {
      * @param intent
      * @return
      */
-    public Uri geturi(android.content.Intent intent) {
+    public Uri getUri(android.content.Intent intent) {
         Uri uri = intent.getData();
         String type = intent.getType();
         if (uri.getScheme().equals("file") && (type.contains("image/"))) {
@@ -255,4 +186,81 @@ public class MainActivity extends Activity {
             System.exit(0);
         }
     }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        switch (id) {
+            case R.id.btn_camera:
+                capturePicture();
+                break;
+            case R.id.btn_album:
+                choosePhoto();
+                break;
+            case R.id.net_inner:
+                ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_INNER);
+                PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_INNER);
+                break;
+            case R.id.net_outer:
+                ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_OUTER);
+                PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);
+                break;
+            case R.id.activity_settings:
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                break;
+        }
+    }
+
+    public void capturePicture() {
+        File file = new File("/sdcard/AImage/");
+        if (!file.exists())
+            file.mkdir();
+        String name = new DateFormat().format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
+        mFilePath = "/sdcard/AImage/"+name;
+        String temp = file.getAbsolutePath() + "/" + name;
+        Uri uri;
+        if (Build.VERSION.SDK_INT >= 23) {
+            int checkCameraPermission = ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.CAMERA);
+            if (checkCameraPermission != PackageManager.PERMISSION_GRANTED) {
+                if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_ASK_CAMERA);
+                else {
+                    Toast.makeText(getApplication(), "Denied just now", Toast.LENGTH_LONG).show();
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_ASK_CAMERA);
+                }
+            } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                ContentValues contentValues = new ContentValues(1);
+                contentValues.put(MediaStore.Images.Media.DATA, temp);
+                uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
+            } else {
+                uri = Uri.fromFile(new File(temp));
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
+            }
+        } else {
+            uri = Uri.fromFile(new File(temp));
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
+        }
+    }
+
+    private void choosePhoto() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            //申请WRITE_EXTERNAL_STORAGE权限
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_CODE_ASK_ALBUM);
+        } else {
+            Intent intent = new Intent(Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(intent, REQUEST_CODE_ASK_ALBUM);
+        }
+    }
+
 }

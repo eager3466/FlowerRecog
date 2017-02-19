@@ -35,19 +35,8 @@ public class Consts {
 
     public static final String AVATAR_CACHE_FILE =  "avatar.png";
 
-    /**
-     * exit interval
-     */
-    public static final int INTERVAL = 2000;
-
-    /**
-     * page offset
-     */
-    public static final int PAGE_OFFSET = 20;
-
-    public static int NOTI_BUILDER_UPDATE = 101;
-    public static int NOTI_BUILDER_DOWNLOAD = 102;
-
+    public static final String SERVER_ADDRESS = "server_address";
     public static final String SERVER_INNER = "http://172.21.15.159:8086";
     public static final String SERVER_OUTER = "http://mpccl.bjut.edu.cn/paperretrieval/transmit";
+
 }

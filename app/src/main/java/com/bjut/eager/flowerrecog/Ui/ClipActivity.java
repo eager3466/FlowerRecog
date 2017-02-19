@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
@@ -20,9 +19,11 @@ import android.widget.Toast;
 import com.bjut.eager.flowerrecog.Bean.Item;
 import com.bjut.eager.flowerrecog.R;
 import com.bjut.eager.flowerrecog.Utils.JsonUtil;
-import com.bjut.eager.flowerrecog.Utils.UpLoadTask;
 import com.bjut.eager.flowerrecog.View.DividerItemDecoration;
 import com.bjut.eager.flowerrecog.View.RecyclerAdapter;
+import com.bjut.eager.flowerrecog.common.constant.Consts;
+import com.bjut.eager.flowerrecog.common.constant.PreferenceConsts;
+import com.bjut.eager.flowerrecog.common.util.PreferenceUtils;
 import com.githang.clipimage.ClipImageView;
 
 import java.io.ByteArrayOutputStream;
@@ -39,75 +40,40 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ClipActivity extends Activity {
+public class ClipActivity extends Activity implements View.OnClickListener {
 
-    ClipImageView clipImageView;
-    Button btn_confirm;
-    ImageView show;
+    private ClipImageView clipImageView;
+    private Button btn_confirm;
+    private ImageView show;
     private RecyclerView recyclerView;
-    private RecyclerView.Adapter mAdapter;
     private LinearLayoutManager mLayoutManager;
     private TextView recog_title;
     private static final MediaType MEDIA_OBJECT_STREAM = MediaType.parse("application/octet-stream");
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
+    private static String REQUEST_URL;
+    private long startTime;
+    private String filePath;
+    private Bitmap bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clip);
-        final String filePath = getIntent().getStringExtra("path");
-        final Bitmap bitmap = BitmapFactory.decodeFile(filePath);
+        if (getIntent() != null) {
+            filePath = getIntent().getStringExtra("path");
+            bitmap = BitmapFactory.decodeFile(filePath);
+        }
         recog_title = (TextView) findViewById(R.id.recog_text);
         recog_title.setVisibility(View.INVISIBLE);
 
-        sharedPreferences = getSharedPreferences("NET_CONFIG", Activity.MODE_PRIVATE);
-        editor = sharedPreferences.edit();
-        final int picSize = sharedPreferences.getInt("PicSize", 227);
-
         clipImageView = (ClipImageView) findViewById(R.id.clip_image_view);
-        clipImageView.setImageBitmap(bitmap);
+        if (bitmap != null) {
+            clipImageView.setImageBitmap(bitmap);
+        }
 
         show = (ImageView) findViewById(R.id.imageView2);
 
         btn_confirm = (Button) findViewById(R.id.btn_confirm);
-        btn_confirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if(btn_confirm.getText().equals("确认裁剪")) {
-                    btn_confirm.setText("正在上传并识别中……");
-                    clipImageView.setVisibility(View.INVISIBLE);
-                    Bitmap result = clipImageView.clip();
-                    result = Bitmap.createScaledBitmap(result, picSize, picSize, true);
-                    uploadPic(result);
-//                    UpLoadTask task = new UpLoadTask(show, handler, getApplication());
-//                    task.execute(result);
-
-                    Log.i("YhqTest", result.getWidth()  + "");
-                    Log.i("YhqTest", result.getHeight() + "");
-                    Log.i("YhqTest", result.getByteCount() + "");
-                    FileOutputStream outputStream = null;
-                    try {
-                        outputStream = new FileOutputStream(filePath + ".tmp");
-                        result.compress(Bitmap.CompressFormat.PNG, 50, outputStream);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (outputStream != null) {
-                            try {
-                                outputStream.flush();
-                                outputStream.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                } else if (btn_confirm.getText().equals("完成识别")){
-                    finish();
-                }
-            }
-        });
+        btn_confirm.setOnClickListener(this);
 
         recyclerView = (RecyclerView) findViewById(R.id.recycleView);
         mLayoutManager = new LinearLayoutManager(getApplication());
@@ -119,31 +85,35 @@ public class ClipActivity extends Activity {
 
     }
 
-    private void uploadPic(final Bitmap result) {
+    private void uploadPic(Bitmap result) {
+        if (result == null) {
+            return ;
+        }
         final Bitmap bitmap = result;
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream);
         byte[] byteArray = stream.toByteArray();
-
+        Log.i("YhqTest", "pic size " + (byteArray.length/1024) + "kb");
         OkHttpClient client = new OkHttpClient();
         RequestBody body = RequestBody.create(MEDIA_OBJECT_STREAM, byteArray);
         final Request request = new Request.Builder()
-                .url("http://mpccl.bjut.edu.cn/paperretrieval/transmit")
+                .url(REQUEST_URL)
                 .post(body)
                 .build();
         Call call = client.newCall(request);
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-
+                Log.i("YhqTest", "request failed: " + e.toString());
+                Log.i("YhqTest", "response time: " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 String result = response.body().string();
-
+                Log.i("YhqTest", "response time: " + ((System.currentTimeMillis() - startTime) / 1000) + "s");
                 if (result != null) {
-                    Log.i("YhqTest", "result" + result);
+                    Log.i("YhqTest", "request successful, result: " + result);
                     items = JsonUtil.parse(result);
                     doUIRefresh(bitmap);
                 }
@@ -172,17 +142,46 @@ public class ClipActivity extends Activity {
 
     private ArrayList<Item> items;
 
-    Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case 1:
-                    ArrayList<Item> items = (ArrayList<Item>) msg.obj;
+    Handler handler = new Handler();
 
-            }
-            super.handleMessage(msg);
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        switch (id) {
+            case R.id.btn_confirm:
+                int picSize = PreferenceUtils.getInt(PreferenceConsts.PIC_SIZE, PreferenceConsts.DEFAULT_PIC_SIZE);
+                REQUEST_URL = PreferenceUtils.getString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);
+                if(btn_confirm.getText().equals("确认裁剪")) {
+                    btn_confirm.setText("正在上传并识别中……");
+                    startTime = System.currentTimeMillis();
+                    clipImageView.setVisibility(View.INVISIBLE);
+                    Bitmap result = clipImageView.clip();
+                    result = Bitmap.createScaledBitmap(result, picSize, picSize, true);
+                    uploadPic(result);
+
+                    Log.i("YhqTest", result.getWidth()  + "");
+                    Log.i("YhqTest", result.getHeight() + "");
+                    Log.i("YhqTest", result.getByteCount() + "");
+                    FileOutputStream outputStream = null;
+                    try {
+                        outputStream = new FileOutputStream(filePath + ".tmp");
+                        result.compress(Bitmap.CompressFormat.PNG, 50, outputStream);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (outputStream != null) {
+                            try {
+                                outputStream.flush();
+                                outputStream.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                } else if (btn_confirm.getText().equals("完成识别")){
+                    finish();
+                }
+            break;
         }
-    };
-
-
+    }
 }
