@@ -37,7 +37,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     final public static int REQUEST_CODE_ASK_CAMERA = 1;
     final public static int REQUEST_CODE_ASK_ALBUM  = 2;
 
-    private Button btn_camera;
     private String mFilePath;
 
     @Override
@@ -205,7 +204,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_OUTER);
                 PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);
                 break;
-            case R.id.activity_settings:
+            case R.id.btn_settings:
                 Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(intent);
                 break;

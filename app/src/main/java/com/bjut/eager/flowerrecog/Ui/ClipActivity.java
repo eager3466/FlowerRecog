@@ -49,7 +49,7 @@ public class ClipActivity extends Activity implements View.OnClickListener {
     private LinearLayoutManager mLayoutManager;
     private TextView recog_title;
     private static final MediaType MEDIA_OBJECT_STREAM = MediaType.parse("application/octet-stream");
-    private static String REQUEST_URL;
+    private static String REQUEST_URL = PreferenceUtils.getString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);;
     private long startTime;
     private String filePath;
     private Bitmap bitmap;
@@ -150,7 +150,6 @@ public class ClipActivity extends Activity implements View.OnClickListener {
         switch (id) {
             case R.id.btn_confirm:
                 int picSize = PreferenceUtils.getInt(PreferenceConsts.PIC_SIZE, PreferenceConsts.DEFAULT_PIC_SIZE);
-                REQUEST_URL = PreferenceUtils.getString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);
                 if(btn_confirm.getText().equals("确认裁剪")) {
                     btn_confirm.setText("正在上传并识别中……");
                     startTime = System.currentTimeMillis();
