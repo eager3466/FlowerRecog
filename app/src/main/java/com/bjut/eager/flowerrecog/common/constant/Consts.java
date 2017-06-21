@@ -36,7 +36,7 @@ public class Consts {
     public static final String AVATAR_CACHE_FILE =  "avatar.png";
 
     public static final String SERVER_ADDRESS = "server_address";
-    public static final String SERVER_INNER = "http://172.21.15.159:8086";
+    public static final String SERVER_INNER = "http://172.21.15.117:8086";
     public static final String SERVER_OUTER = "http://mpccl.bjut.edu.cn/paperretrieval/transmit";
 
 }

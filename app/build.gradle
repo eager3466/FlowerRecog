@@ -20,6 +20,9 @@ android {
     }
 }
 
+// key ailias:eager
+// password : 123456
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
