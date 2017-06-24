@@ -4,7 +4,7 @@ package com.bjut.eager.flowerrecog.common.constant;
  * Preference Consts
  * All Preference Const Should Store Here.
  *
- * Created by yuym on 4/2/15.
+ * Created by Eager.
  */
 public class PreferenceConsts {
 

@@ -34,8 +34,9 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
-    final public static int REQUEST_CODE_ASK_CAMERA = 1;
-    final public static int REQUEST_CODE_ASK_ALBUM  = 2;
+    public final static int REQUEST_CODE_ASK_CAMERA = 1;
+    public final static int REQUEST_CODE_ASK_ALBUM  = 2;
+    private final static String IMAGE_PATH = "/sdcard/AImage/";
 
     private String mFilePath;
 
@@ -55,7 +56,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // TODO Auto-generated method stub
+
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_CODE_ASK_CAMERA) {
@@ -82,7 +83,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (data == null)
             return;
 
-//                Uri selectedImage = data.getData();
+//          Uri selectedImage = data.getData();
         Uri selectedImage = getUri(data);
         Log.i("Yhqtest", selectedImage.toString());
         String[] filePathColumns = {MediaStore.Images.Media.DATA};
@@ -142,10 +143,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         switch (requestCode) {
             case REQUEST_CODE_ASK_CAMERA:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
+                    capturePicture();
                 } else {
-                    Toast.makeText(getApplication(), "CAMREA Denied", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplication(), R.string.camera_denied, Toast.LENGTH_SHORT).show();
                 }
                 break;
             case REQUEST_CODE_ASK_ALBUM:
@@ -154,7 +154,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                     startActivityForResult(intent, REQUEST_CODE_ASK_ALBUM);
                 } else {
-                    Toast.makeText(getApplication(), "ALBUM Denied", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplication(), R.string.album_denied, Toast.LENGTH_SHORT).show();
                 }
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -178,7 +178,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void exit() {
         if (!isExit) {
             isExit = true;
-            Toast.makeText(getApplicationContext(), "再次点击返回键退出程序", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), R.string.exit_confirm, Toast.LENGTH_SHORT).show();
             mHandler.sendEmptyMessageDelayed(0, 2000);
         } else {
             finish();
@@ -212,21 +212,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     public void capturePicture() {
-        File file = new File("/sdcard/AImage/");
+        File file = new File(IMAGE_PATH);
         if (!file.exists())
             file.mkdir();
         String name = new DateFormat().format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
-        mFilePath = "/sdcard/AImage/"+name;
         String temp = file.getAbsolutePath() + "/" + name;
+        mFilePath = temp;
         Uri uri;
         if (Build.VERSION.SDK_INT >= 23) {
             int checkCameraPermission = ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.CAMERA);
             if (checkCameraPermission != PackageManager.PERMISSION_GRANTED) {
                 if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_ASK_CAMERA);
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE},
+                            REQUEST_CODE_ASK_CAMERA);
                 else {
-                    Toast.makeText(getApplication(), "Denied just now", Toast.LENGTH_LONG).show();
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_ASK_CAMERA);
+                    Toast.makeText(getApplication(), R.string.camera_denied, Toast.LENGTH_LONG).show();
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE},
+                            REQUEST_CODE_ASK_CAMERA);
                 }
             } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);

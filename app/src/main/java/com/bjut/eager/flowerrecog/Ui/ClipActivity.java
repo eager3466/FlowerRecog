@@ -49,7 +49,7 @@ public class ClipActivity extends Activity implements View.OnClickListener {
     private LinearLayoutManager mLayoutManager;
     private TextView recog_title;
     private static final MediaType MEDIA_OBJECT_STREAM = MediaType.parse("application/octet-stream");
-    private static String REQUEST_URL = PreferenceUtils.getString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);;
+    private String REQUEST_URL = PreferenceUtils.getString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);;
     private long startTime;
     private String filePath;
     private Bitmap bitmap;

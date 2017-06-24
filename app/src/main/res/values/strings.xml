@@ -9,5 +9,8 @@
     <string name="msg_could_not_save_photo">无法保存图片</string>
     <string name="msg_clipping_image">正在裁剪图片</string>
     <string name="title_activity_settings">图片参数设置</string>
+    <string name="exit_confirm">再次点击返回键退出程序</string>
+    <string name="camera_denied">相机拒绝访问</string>
+    <string name="album_denied">相册拒绝访问</string>
 
 </resources>
