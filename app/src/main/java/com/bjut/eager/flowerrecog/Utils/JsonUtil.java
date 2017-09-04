@@ -3,6 +3,7 @@ package com.bjut.eager.flowerrecog.Utils;
 import android.util.Log;
 
 import com.bjut.eager.flowerrecog.Bean.Item;
+import com.bjut.eager.flowerrecog.common.constant.Consts;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,7 +20,7 @@ public class JsonUtil {
         ArrayList<Item> items = new ArrayList<>();
         try
         {
-            Log.i("YhqTest", "return string: " + jsonString);
+            Log.i(Consts.LOG_TAG, "return string: " + jsonString);
             JSONObject jsonObject = new JSONObject(jsonString);
             JSONArray data = (JSONArray) jsonObject.get("data");
             for (int i=0; i<data.length(); i++) {
@@ -28,6 +29,7 @@ public class JsonUtil {
                 item.setIndex(J_item.getInt(0));
                 item.setProbability((float)J_item.getDouble(1));
                 item.setDescription(J_item.getString(2));
+                item.setTypeCode(J_item.getString(3));
                 items.add(item);
             }
         }catch(Exception e){

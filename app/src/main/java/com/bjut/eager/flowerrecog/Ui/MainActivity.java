@@ -19,7 +19,6 @@ import android.support.v4.content.ContextCompat;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,7 +35,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     public final static int REQUEST_CODE_ASK_CAMERA = 1;
     public final static int REQUEST_CODE_ASK_ALBUM  = 2;
-    private final static String IMAGE_PATH = "/sdcard/AImage/";
 
     private String mFilePath;
 
@@ -44,7 +42,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String address = PreferenceUtils.getString(PreferenceConsts.SERVER_ADDRESS, Consts.SERVER_OUTER);
+        String address = PreferenceUtils.getString(PreferenceConsts.SERVER_ADDRESS, Consts.SERVER_URL_OUTER);
         ((TextView)findViewById(R.id.net_addr_text)).setText(address);
 
         findViewById(R.id.btn_camera).setOnClickListener(this);
@@ -85,7 +83,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 //          Uri selectedImage = data.getData();
         Uri selectedImage = getUri(data);
-        Log.i("Yhqtest", selectedImage.toString());
+        Log.i(Consts.LOG_TAG, selectedImage.toString());
         String[] filePathColumns = {MediaStore.Images.Media.DATA};
         Cursor c = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
         if(c != null) {
@@ -197,12 +195,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 choosePhoto();
                 break;
             case R.id.net_inner:
-                ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_INNER);
-                PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_INNER);
+                ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_URL_INNER);
+                PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_URL_INNER);
                 break;
             case R.id.net_outer:
-                ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_OUTER);
-                PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_OUTER);
+                ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_URL_OUTER);
+                PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_URL_OUTER);
                 break;
             case R.id.btn_settings:
                 Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
@@ -212,11 +210,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     public void capturePicture() {
-        File file = new File(IMAGE_PATH);
+        File file = new File(Consts.IMAGE_PATH);
         if (!file.exists())
             file.mkdir();
-        String name = new DateFormat().format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
-        String temp = file.getAbsolutePath() + "/" + name;
+        String temp = file.getAbsolutePath() + "/" + Consts.TEMP_FILE_NAME;
         mFilePath = temp;
         Uri uri;
         if (Build.VERSION.SDK_INT >= 23) {

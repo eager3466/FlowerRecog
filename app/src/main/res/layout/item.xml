@@ -5,11 +5,9 @@
     android:orientation="horizontal"
     android:padding="10dp">
 
-    <TextView
+    <ImageView
+        android:id="@+id/iv_pic_demo"
         android:layout_width="65dp"
-        android:text="识别结果"
-        android:textColor="#000000"
-        android:id="@+id/textView2"
         android:gravity="center_vertical"
         android:layout_height="65dp" />
 

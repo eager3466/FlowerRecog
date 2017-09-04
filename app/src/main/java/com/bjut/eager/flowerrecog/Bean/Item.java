@@ -8,6 +8,7 @@ public class Item {
     private int mIndex;
     private float mProbability;
     private String mDescription;
+    private String mTypeCode;
 
     public String getDescription() {
         return mDescription;
@@ -33,12 +34,21 @@ public class Item {
         this.mIndex = index;
     }
 
+    public String getTypeCode() {
+        return mTypeCode;
+    }
+
+    public void setTypeCode(String typeCode) {
+        this.mTypeCode = typeCode;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Index: ").append(getIndex())
                 .append("\nProbability: ").append(getProbability())
-                .append("\nDescription: ").append(getDescription());
+                .append("\nDescription: ").append(getDescription())
+                .append("\nTypeCode: ").append(getTypeCode());
         return builder.toString();
     }
 }

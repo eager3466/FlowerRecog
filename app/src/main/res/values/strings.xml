@@ -12,5 +12,8 @@
     <string name="exit_confirm">再次点击返回键退出程序</string>
     <string name="camera_denied">相机拒绝访问</string>
     <string name="album_denied">相册拒绝访问</string>
-
+    <string name="list_empty">返回列表为空</string>
+    <string name="recog_finish">完成识别</string>
+    <string name="clip_confirm">确认裁剪</string>
+    <string name="uploading">正在上传并识别中……</string>
 </resources>
