@@ -28,7 +28,9 @@ import com.bjut.eager.flowerrecog.common.constant.PreferenceConsts;
 import com.bjut.eager.flowerrecog.common.util.PreferenceUtils;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends Activity implements View.OnClickListener {
@@ -37,6 +39,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public final static int REQUEST_CODE_ASK_ALBUM  = 2;
 
     private String mFilePath;
+    private Uri photoUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,83 +60,22 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == REQUEST_CODE_ASK_CAMERA) {
-                dealCaptureResult();
-            } else if (requestCode == REQUEST_CODE_ASK_ALBUM) {
-                dealAlbumResult(data);
+            if (requestCode == REQUEST_CODE_ASK_ALBUM) {
+                photoUri = data.getData();
+            }
+            if (photoUri != null) {
+                Intent intent = new Intent(this, ClipActivity.class);
+                intent.putExtra("uri", photoUri.toString());
+                startActivity(intent);
             }
         }
     }
 
-    private void dealCaptureResult() {
-        String sdStatus = Environment.getExternalStorageState();
-        if (!sdStatus.equals(Environment.MEDIA_MOUNTED)) { // 检测sd是否可用
-            Log.i("TestFile",
-                    "SD card is not avaiable/writeable right now.");
-            return;
-        }
-        Intent intent = new Intent(this, ClipActivity.class);
-        intent.putExtra("path", mFilePath);
-        startActivity(intent);
-    }
-
-    private void dealAlbumResult(Intent data) {
-        if (data == null)
-            return;
-
-//          Uri selectedImage = data.getData();
-        Uri selectedImage = getUri(data);
-        Log.i(Consts.LOG_TAG, selectedImage.toString());
-        String[] filePathColumns = {MediaStore.Images.Media.DATA};
-        Cursor c = getContentResolver().query(selectedImage, filePathColumns, null, null, null);
-        if(c != null) {
-            c.moveToFirst();
-            int columnIndex = c.getColumnIndex(filePathColumns[0]);
-            mFilePath = c.getString(columnIndex);
-            Intent intent = new Intent(this, ClipActivity.class);
-            intent.putExtra("path", mFilePath);
-            startActivity(intent);
-        }
-    }
-
-    /**
-     * 解决小米手机上获取图片路径为null的情况
-     * @param intent
-     * @return
-     */
-    public Uri getUri(android.content.Intent intent) {
-        Uri uri = intent.getData();
-        String type = intent.getType();
-        if (uri.getScheme().equals("file") && (type.contains("image/"))) {
-            String path = uri.getEncodedPath();
-            if (path != null) {
-                path = Uri.decode(path);
-                ContentResolver cr = this.getContentResolver();
-                StringBuffer buff = new StringBuffer();
-                buff.append("(").append(MediaStore.Images.ImageColumns.DATA).append("=")
-                        .append("'" + path + "'").append(")");
-                Cursor cur = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        new String[] { MediaStore.Images.ImageColumns._ID },
-                        buff.toString(), null, null);
-                int index = 0;
-                for (cur.moveToFirst(); !cur.isAfterLast(); cur.moveToNext()) {
-                    index = cur.getColumnIndex(MediaStore.Images.ImageColumns._ID);
-                    // set _id value
-                    index = cur.getInt(index);
-                }
-                if (index == 0) {
-                    // do nothing
-                } else {
-                    Uri uri_temp = Uri
-                            .parse("content://media/external/images/media/"
-                                    + index);
-                    if (uri_temp != null) {
-                        uri = uri_temp;
-                    }
-                }
-            }
-        }
-        return uri;
+    private void choosePhotoFromAlbum() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent, REQUEST_CODE_ASK_ALBUM);
     }
 
     @Override
@@ -211,43 +153,48 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     public void capturePicture() {
         File file = new File(Consts.IMAGE_PATH);
-        if (!file.exists())
+        if (!file.exists()) {
             file.mkdir();
-        String temp = file.getAbsolutePath() + "/" + Consts.TEMP_FILE_NAME;
+        }
+        String name = DateFormat.format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
+        String temp = file.getAbsolutePath() + "/" + name;
         mFilePath = temp;
-        Uri uri;
         if (Build.VERSION.SDK_INT >= 23) {
             int checkCameraPermission = ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.CAMERA);
             if (checkCameraPermission != PackageManager.PERMISSION_GRANTED) {
-                if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
+                if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
                     ActivityCompat.requestPermissions(MainActivity.this,
                             new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE},
                             REQUEST_CODE_ASK_CAMERA);
-                else {
+                } else {
                     Toast.makeText(getApplication(), R.string.camera_denied, Toast.LENGTH_LONG).show();
                     ActivityCompat.requestPermissions(MainActivity.this,
                             new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE},
                             REQUEST_CODE_ASK_CAMERA);
                 }
-            } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                ContentValues contentValues = new ContentValues(1);
-                contentValues.put(MediaStore.Images.Media.DATA, temp);
-                uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
             } else {
-                uri = Uri.fromFile(new File(temp));
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-                startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
+                takePhotoFromSystem();
             }
         } else {
-            uri = Uri.fromFile(new File(temp));
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-            startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
+            takePhotoFromSystem();
         }
+    }
+
+    private void takePhotoFromSystem() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+
+        SimpleDateFormat timeStampFormat = new SimpleDateFormat(
+                "yyyy_MM_dd_HH_mm_ss");
+        String filename = timeStampFormat.format(new Date());
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, filename);
+        photoUri = getContentResolver().insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+
+        startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
     }
 
     private void choosePhoto() {
@@ -257,9 +204,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_CODE_ASK_ALBUM);
         } else {
-            Intent intent = new Intent(Intent.ACTION_PICK,
-                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(intent, REQUEST_CODE_ASK_ALBUM);
+            choosePhotoFromAlbum();
         }
     }
 

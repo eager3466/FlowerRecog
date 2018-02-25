@@ -22,5 +22,9 @@ public class Consts {
     public static final String SERVER_URL_OUTER = "http://mpccl.bjut.edu.cn/paperretrieval/transmit";
     public static final String PICTURE_GET_URL_INNER = "http://172.21.15.117:8086?type_code=";
     public static final String PIC_APPENDIX = ".jpg";
+    public static final String PIC_TITLE = "image";
+
+    // Intent Consts
+    public static final String INTENT_IMAGE_URI = "uri";
 
 }

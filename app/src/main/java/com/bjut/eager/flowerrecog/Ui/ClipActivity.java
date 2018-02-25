@@ -3,8 +3,10 @@ package com.bjut.eager.flowerrecog.Ui;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
@@ -26,10 +28,13 @@ import com.bjut.eager.flowerrecog.common.util.PreferenceUtils;
 import com.githang.clipimage.ClipImageView;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import okhttp3.Call;
@@ -53,7 +58,7 @@ public class ClipActivity extends Activity implements View.OnClickListener {
     private String REQUEST_URL = PreferenceUtils.getString(Consts.SERVER_ADDRESS, Consts.SERVER_URL_OUTER);
     private ArrayList<Item> items;
     private long startTime;
-    private String filePath;
+    private Uri mUri;
     private Bitmap bitmap;
 
     Handler handler = new Handler();
@@ -63,17 +68,24 @@ public class ClipActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clip);
         if (getIntent() != null) {
-            filePath = getIntent().getStringExtra("path");
-            bitmap = BitmapFactory.decodeFile(filePath);
+            mUri = Uri.parse(getIntent().getStringExtra(Consts.INTENT_IMAGE_URI));
+            try {
+                bitmap = getBitmapFromUri(mUri);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         recog_title = (TextView) findViewById(R.id.recog_text);
         recog_title.setVisibility(View.INVISIBLE);
 
         clipImageView = (ClipImageView) findViewById(R.id.clip_image_view);
+
         if (bitmap != null) {
+            Log.i(Consts.LOG_TAG, "Bitmap not null");
+            Log.i(Consts.LOG_TAG, "Bitmap width:" +  bitmap.getWidth());
+            Log.i(Consts.LOG_TAG, "Bitmap height:" + bitmap.getHeight());
             clipImageView.setImageBitmap(bitmap);
         }
-
         show = (ImageView) findViewById(R.id.imageView2);
 
         btn_confirm = (Button) findViewById(R.id.btn_confirm);
@@ -106,7 +118,7 @@ public class ClipActivity extends Activity implements View.OnClickListener {
             Log.i(Consts.LOG_TAG, "pic size " + (file.length() / 1024) + "kb");
             OkHttpClient client = new OkHttpClient();
             MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-            builder.addFormDataPart("image", file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
+            builder.addFormDataPart(Consts.PIC_TITLE, file.getName(), RequestBody.create(MEDIA_TYPE_JPG, file));
             final Request request = new Request.Builder()
                     .url(REQUEST_URL)
                     .post(builder.build())
@@ -135,6 +147,34 @@ public class ClipActivity extends Activity implements View.OnClickListener {
         } catch (IOException e) {
             Log.w(Consts.LOG_TAG, "IOException while generating pic.");
         }
+    }
+
+    private Bitmap getBitmapFromUri(Uri uri) throws IOException {
+        if (null == uri) {
+            return null;
+        }
+        InputStream is = getContentResolver().openInputStream(uri);
+//        Bitmap original = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mUri);
+//        ByteArrayOutputStream out = new ByteArrayOutputStream();
+//        original.compress(Bitmap.CompressFormat.JPEG, 60, out);
+//        Bitmap decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(is, null, options);
+        is.close();
+        if (options.outHeight == 0 || options.outWidth == 0) {
+            return null;
+        }
+        int scale = options.inSampleSize = 1;
+        // 把照片宽高较低的那个降至1000以下
+        while(options.outHeight / scale > 1000 && options.outWidth / scale > 1000) {
+            scale = scale * 2;
+        }
+        options.inSampleSize = scale;
+        options.inJustDecodeBounds = false;
+        is = getContentResolver().openInputStream(uri);
+        Bitmap bitmap = BitmapFactory.decodeStream(is, null, options);
+        return bitmap;
     }
 
     private void doUIRefresh(final Bitmap bitmap) {
@@ -167,6 +207,8 @@ public class ClipActivity extends Activity implements View.OnClickListener {
                     startTime = System.currentTimeMillis();
                     clipImageView.setVisibility(View.INVISIBLE);
                     Bitmap result = clipImageView.clip();
+                    Log.i(Consts.LOG_TAG, "Result width:" +  result.getWidth());
+                    Log.i(Consts.LOG_TAG, "Result height:" + result.getHeight());
                     result = Bitmap.createScaledBitmap(result, picSize, picSize, true);
                     Log.i(Consts.LOG_TAG, "Result width:" +  result.getWidth());
                     Log.i(Consts.LOG_TAG, "Result height:" + result.getHeight());
