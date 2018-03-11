@@ -194,6 +194,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
 
+        finish();
+        
         startActivityForResult(intent, REQUEST_CODE_ASK_CAMERA);
     }
 
