@@ -225,6 +225,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             choosePhotoFromAlbum();
         }
 	// All conflicts resolved, new base
+	// yhq-change1 from the new base
     }
 
 }
