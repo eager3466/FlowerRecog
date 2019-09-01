@@ -224,6 +224,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else {
             choosePhotoFromAlbum();
         }
+	// made change 1 from yhq. Base on no anthoer line
     }
 
 }
