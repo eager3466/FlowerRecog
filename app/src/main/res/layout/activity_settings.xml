@@ -118,4 +118,45 @@
             android:layout_marginLeft="30dp" />
     </LinearLayout>
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="1">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="http://172.21.15.98"
+            android:id="@+id/set_server_url"
+            android:layout_weight="1" />
+
+        <Button
+            android:text="重设内网地址"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_cfm_url" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="1">
+
+        <EditText
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:hint="8086"
+            android:id="@+id/set_server_port" />
+
+        <Button
+            android:text="重设端口号"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="15dp"
+            android:id="@+id/btn_cfm_port"
+            android:layout_marginLeft="30dp" />
+    </LinearLayout>
+
 </LinearLayout>

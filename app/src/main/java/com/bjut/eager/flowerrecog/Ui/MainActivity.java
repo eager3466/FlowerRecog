@@ -2,22 +2,19 @@ package com.bjut.eager.flowerrecog.Ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,14 +42,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String address = PreferenceUtils.getString(PreferenceConsts.SERVER_ADDRESS, Consts.SERVER_URL_OUTER);
-        ((TextView)findViewById(R.id.net_addr_text)).setText(address);
 
         findViewById(R.id.btn_camera).setOnClickListener(this);
         findViewById(R.id.btn_album).setOnClickListener(this);
         findViewById(R.id.net_inner).setOnClickListener(this);
         findViewById(R.id.net_outer).setOnClickListener(this);
         findViewById(R.id.btn_settings).setOnClickListener(this);
+
+        initServerUrlSP();
+
+    }
+
+    private void initServerUrlSP() {
+        if (TextUtils.isEmpty(PreferenceUtils.getString(PreferenceConsts.SERVER_URL, ""))) {
+            PreferenceUtils.putString(PreferenceConsts.SERVER_URL, Consts.SERVER_URL_DEFAULT);
+        }
+        if (PreferenceUtils.getInt(PreferenceConsts.SERVER_PORT, 0) == 0) {
+            PreferenceUtils.putInt(PreferenceConsts.SERVER_PORT, Consts.SERVER_PORT_DEFAULT);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        String innerUrl = PreferenceUtils.getString(PreferenceConsts.SERVER_URL, "") + Consts.SEPARATOR
+                + PreferenceUtils.getInt(PreferenceConsts.SERVER_PORT, 0);
+        ((TextView)findViewById(R.id.net_addr_text)).setText(innerUrl);
     }
 
     @Override
@@ -137,8 +152,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 choosePhoto();
                 break;
             case R.id.net_inner:
-                ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_URL_INNER);
-                PreferenceUtils.putString(Consts.SERVER_ADDRESS, Consts.SERVER_URL_INNER);
+                String innerUrl = PreferenceUtils.getString(PreferenceConsts.SERVER_URL, "") + Consts.SEPARATOR
+                        + PreferenceUtils.getInt(PreferenceConsts.SERVER_PORT, 0);
+                ((TextView)findViewById(R.id.net_addr_text)).setText(innerUrl);
+                PreferenceUtils.putString(Consts.SERVER_ADDRESS, innerUrl);
                 break;
             case R.id.net_outer:
                 ((TextView)findViewById(R.id.net_addr_text)).setText(Consts.SERVER_URL_OUTER);

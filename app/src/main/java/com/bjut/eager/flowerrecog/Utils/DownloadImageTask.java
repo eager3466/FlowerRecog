@@ -7,6 +7,8 @@ import android.util.LruCache;
 import android.widget.ImageView;
 
 import com.bjut.eager.flowerrecog.common.constant.Consts;
+import com.bjut.eager.flowerrecog.common.constant.PreferenceConsts;
+import com.bjut.eager.flowerrecog.common.util.PreferenceUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -41,8 +43,10 @@ public class DownloadImageTask implements Runnable {
     @Override
     public void run() {
         OkHttpClient httpClient = new OkHttpClient();
+        String innerUrl = PreferenceUtils.getString(PreferenceConsts.SERVER_URL, "") + Consts.SEPARATOR
+                + PreferenceUtils.getInt(PreferenceConsts.SERVER_PORT, 0);
         Request request = new Request.Builder()
-                .url(Consts.PICTURE_GET_URL_INNER+mTypeCode)
+                .url(innerUrl + Consts.PICTURE_GET_URL_SUFFIX +mTypeCode)
                 .build();
         Call call = httpClient.newCall(request);
         call.enqueue(new Callback() {
